@@ -1,53 +1,57 @@
-using System;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Net;
-using System.Web.Mvc;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
+using ContosoUniversity.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace ContosoUniversity.Controllers
 {
     public class DepartmentsController : BaseController
     {
-        // GET: Departments - All roles can view
-        public ActionResult Index()
+        public DepartmentsController(SchoolContext context, NotificationService notificationService) 
+            : base(context, notificationService)
         {
-            var departments = db.Departments.Include(d => d.Administrator);
+        }
+
+        // GET: Departments - All roles can view
+        public IActionResult Index()
+        {
+            var departments = _db.Departments.Include(d => d.Administrator);
             return View(departments.ToList());
         }
 
         // GET: Departments/Details/5
-        public ActionResult Details(int? id)
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Department department = db.Departments.Find(id);
+            Department? department = _db.Departments.Find(id);
             if (department == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(department);
         }
 
         // GET: Departments/Create
-        public ActionResult Create()
+        public IActionResult Create()
         {
-            ViewBag.InstructorID = new SelectList(db.Instructors, "ID", "FullName");
+            ViewBag.InstructorID = new SelectList(_db.Instructors, "ID", "FullName");
             return View();
         }
 
         // POST: Departments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Name,Budget,StartDate,InstructorID")] Department department)
+        public IActionResult Create(Department department)
         {
             if (ModelState.IsValid)
             {
-                db.Departments.Add(department);
-                db.SaveChanges();
+                _db.Departments.Add(department);
+                _db.SaveChanges();
                 
                 // Send notification for department creation
                 SendEntityNotification("Department", department.DepartmentID.ToString(), department.Name, EntityOperation.CREATE);
@@ -55,37 +59,37 @@ namespace ContosoUniversity.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.InstructorID = new SelectList(db.Instructors, "ID", "FullName", department.InstructorID);
+            ViewBag.InstructorID = new SelectList(_db.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
         }
 
         // GET: Departments/Edit/5
-        public ActionResult Edit(int? id)
+        public IActionResult Edit(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Department department = db.Departments.Find(id);
+            Department? department = _db.Departments.Find(id);
             if (department == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
-            ViewBag.InstructorID = new SelectList(db.Instructors, "ID", "FullName", department.InstructorID);
+            ViewBag.InstructorID = new SelectList(_db.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
         }
 
         // POST: Departments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "DepartmentID,Name,Budget,StartDate,InstructorID,RowVersion")] Department department)
+        public IActionResult Edit(Department department)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    db.Entry(department).State = EntityState.Modified;
-                    db.SaveChanges();
+                    _db.Entry(department).State = EntityState.Modified;
+                    _db.SaveChanges();
                     
                     // Send notification for department update
                     SendEntityNotification("Department", department.DepartmentID.ToString(), department.Name, EntityOperation.UPDATE);
@@ -115,7 +119,7 @@ namespace ContosoUniversity.Controllers
                         ModelState.AddModelError("StartDate", $"Current value: {databaseValues.StartDate:d}");
                     if (databaseValues.InstructorID != clientValues.InstructorID)
                     {
-                        var instructor = db.Instructors.Find(databaseValues.InstructorID);
+                        var instructor = _db.Instructors.Find(databaseValues.InstructorID);
                         ModelState.AddModelError("InstructorID", $"Current value: {instructor?.FullName}");
                     }
                     
@@ -129,21 +133,21 @@ namespace ContosoUniversity.Controllers
                 }
             }
             
-            ViewBag.InstructorID = new SelectList(db.Instructors, "ID", "FullName", department.InstructorID);
+            ViewBag.InstructorID = new SelectList(_db.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
         }
 
         // GET: Departments/Delete/5
-        public ActionResult Delete(int? id)
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Department department = db.Departments.Find(id);
+            Department? department = _db.Departments.Find(id);
             if (department == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(department);
         }
@@ -151,26 +155,20 @@ namespace ContosoUniversity.Controllers
         // POST: Departments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            Department department = db.Departments.Find(id);
-            var departmentName = department.Name;
-            db.Departments.Remove(department);
-            db.SaveChanges();
-            
-            // Send notification for department deletion
-            SendEntityNotification("Department", id.ToString(), departmentName, EntityOperation.DELETE);
+            Department? department = _db.Departments.Find(id);
+            if (department != null)
+            {
+                var departmentName = department.Name;
+                _db.Departments.Remove(department);
+                _db.SaveChanges();
+                
+                // Send notification for department deletion
+                SendEntityNotification("Department", id.ToString(), departmentName, EntityOperation.DELETE);
+            }
             
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

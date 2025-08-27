@@ -1,18 +1,22 @@
 using System;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Net;
-using System.Web.Mvc;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
+using ContosoUniversity.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace ContosoUniversity.Controllers
 {
     public class StudentsController : BaseController
     {
+        public StudentsController(SchoolContext context, NotificationService notificationService) 
+            : base(context, notificationService)
+        {
+        }
+
         // GET: Students - Admins and Teachers can view
-        public ActionResult Index(string sortOrder, string currentFilter, string searchString, int? page)
+        public IActionResult Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
             ViewBag.CurrentSort = sortOrder;
             ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
@@ -29,7 +33,7 @@ namespace ContosoUniversity.Controllers
 
             ViewBag.CurrentFilter = searchString;
 
-            var students = from s in db.Students
+            var students = from s in _db.Students
                            select s;
             
             if (!String.IsNullOrEmpty(searchString))
@@ -60,25 +64,25 @@ namespace ContosoUniversity.Controllers
         }
 
         // GET: Students/Details/5 - Admins and Teachers can view details
-        public ActionResult Details(int? id)
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Student student = db.Students
+            Student? student = _db.Students
                 .Include(s => s.Enrollments)
                     .ThenInclude(e => e.Course)
-                .Where(s => s.ID == id).Single();
+                .Where(s => s.ID == id).FirstOrDefault();
             if (student == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(student);
         }
 
         // GET: Students/Create
-        public ActionResult Create()
+        public IActionResult Create()
         {
             var student = new Student
             {
@@ -90,7 +94,7 @@ namespace ContosoUniversity.Controllers
         // POST: Students/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate")] Student student)
+        public IActionResult Create(Student student)
         {
             try
             {
@@ -108,8 +112,8 @@ namespace ContosoUniversity.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    db.Students.Add(student);
-                    db.SaveChanges();
+                    _db.Students.Add(student);
+                    _db.SaveChanges();
                     
                     // Send notification for student creation
                     var studentName = $"{student.FirstMidName} {student.LastName}";
@@ -120,23 +124,23 @@ namespace ContosoUniversity.Controllers
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Error creating student: {ex.Message} | Student: {student?.FirstMidName} {student?.LastName} | EnrollmentDate: {student?.EnrollmentDate} | Stack: {ex.StackTrace}");
+                Console.WriteLine($"Error creating student: {ex.Message} | Student: {student?.FirstMidName} {student?.LastName} | EnrollmentDate: {student?.EnrollmentDate}");
                 ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
             }
             return View(student);
         }
 
         // GET: Students/Edit/5
-        public ActionResult Edit(int? id)
+        public IActionResult Edit(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Student student = db.Students.Find(id);
+            Student? student = _db.Students.Find(id);
             if (student == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(student);
         }
@@ -144,7 +148,7 @@ namespace ContosoUniversity.Controllers
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
+        public IActionResult Edit(Student student)
         {
             try
             {
@@ -162,8 +166,8 @@ namespace ContosoUniversity.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    db.Entry(student).State = EntityState.Modified;
-                    db.SaveChanges();
+                    _db.Entry(student).State = EntityState.Modified;
+                    _db.SaveChanges();
                     
                     // Send notification for student update
                     var studentName = $"{student.FirstMidName} {student.LastName}";
@@ -174,23 +178,23 @@ namespace ContosoUniversity.Controllers
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Error editing student: {ex.Message} | Student ID: {student?.ID} | Student: {student?.FirstMidName} {student?.LastName} | EnrollmentDate: {student?.EnrollmentDate} | Stack: {ex.StackTrace}");
+                Console.WriteLine($"Error editing student: {ex.Message} | Student ID: {student?.ID} | Student: {student?.FirstMidName} {student?.LastName} | EnrollmentDate: {student?.EnrollmentDate}");
                 ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
             }
             return View(student);
         }
 
         // GET: Students/Delete/5
-        public ActionResult Delete(int? id)
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return BadRequest();
             }
-            Student student = db.Students.Find(id);
+            Student? student = _db.Students.Find(id);
             if (student == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(student);
         }
@@ -198,35 +202,29 @@ namespace ContosoUniversity.Controllers
         // POST: Students/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
             try
             {
-                Student student = db.Students.Find(id);
-                var studentName = $"{student.FirstMidName} {student.LastName}";
-                db.Students.Remove(student);
-                db.SaveChanges();
-                
-                // Send notification for student deletion
-                SendEntityNotification("Student", id.ToString(), studentName, EntityOperation.DELETE);
+                Student? student = _db.Students.Find(id);
+                if (student != null)
+                {
+                    var studentName = $"{student.FirstMidName} {student.LastName}";
+                    _db.Students.Remove(student);
+                    _db.SaveChanges();
+                    
+                    // Send notification for student deletion
+                    SendEntityNotification("Student", id.ToString(), studentName, EntityOperation.DELETE);
+                }
                 
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Error deleting student: {ex.Message} | Student ID: {id} | Stack: {ex.StackTrace}");
+                Console.WriteLine($"Error deleting student: {ex.Message} | Student ID: {id}");
                 TempData["ErrorMessage"] = "Unable to delete the student. Try again, and if the problem persists see your system administrator.";
                 return RedirectToAction("Index");
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // Base class will dispose db and notificationService
-            }
-            base.Dispose(disposing);
         }
     }
 }
