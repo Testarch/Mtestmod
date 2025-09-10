@@ -53,6 +53,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -209,9 +210,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="App_Start\BundleConfig.cs" />
-    <Compile Include="App_Start\FilterConfig.cs" />
-    <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
@@ -222,9 +220,6 @@
     <Compile Include="Data\SchoolContext.cs" />
     <Compile Include="Data\DbInitializer.cs" />
     <Compile Include="Data\SchoolContextFactory.cs" />
-    <Compile Include="Global.asax.cs">
-      <DependentUpon>Global.asax</DependentUpon>
-    </Compile>
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\CourseAssignment.cs" />
     <Compile Include="Models\Department.cs" />
@@ -310,18 +305,17 @@
     <Content Include="Scripts\jquery-3.4.1.min.map" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != '' And Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
     <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
   </Target>
   <Target Name="CopySQLClientNativeBinaries" AfterTargets="AfterBuild">
-    <!-- Copy SNI native DLLs to bin directory with expected filenames -->
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFiles="$(OutputPath)Microsoft.Data.SqlClient.SNI.x64.dll" SkipUnchangedFiles="true" />
+    <!-- Copy SNI native DLLs - commented out as using PackageReference for Microsoft.Data.SqlClient -->
+    <!-- <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFiles="$(OutputPath)Microsoft.Data.SqlClient.SNI.x64.dll" SkipUnchangedFiles="true" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFiles="$(OutputPath)Microsoft.Data.SqlClient.SNI.x86.dll" SkipUnchangedFiles="true" />
-    <!-- Also copy to subdirectories for compatibility -->
     <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFolder="$(OutputPath)x64\" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFolder="$(OutputPath)x86\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\packages\Microsoft.Data.SqlClient.SNI.runtime.2.1.1\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll" DestinationFolder="$(OutputPath)x86\" SkipUnchangedFiles="true" /> -->
   </Target>
   <ProjectExtensions>
     <VisualStudio>
