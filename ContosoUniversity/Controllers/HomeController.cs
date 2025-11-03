@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using ContosoUniversity.Data;
+using ContosoUniversity.Models;
 using ContosoUniversity.Models.SchoolViewModels;
 using ContosoUniversity.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +42,7 @@ namespace ContosoUniversity.Controllers
 
         public ActionResult Error()
         {
-            return View();
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
         public ActionResult StatusErrorCode(int code)

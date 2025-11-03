@@ -6,16 +6,10 @@ using Microsoft.Extensions.Configuration;
 using ContosoUniversity.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSystemWebAdapters()
-    .AddWrappedAspNetCoreSession()
-    .AddJsonSessionSerializer(options =>
-    {
-        options.RegisterKey<string>("MachineName");
-        options.RegisterKey<string>("SessionStartTime");
-    });
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession();
 builder.Services.AddSingleton<ContosoUniversity.Services.NotificationService>();
 
 var app = builder.Build();
@@ -52,14 +46,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-app.UseSystemWebAdapters();
 
-app.MapControllers()
-    .RequireSystemWebAdapterSession();
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
- pattern: "{controller=Home}/{action=Index}/{id?}")
-    .RequireSystemWebAdapterSession();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();app.Run();
+app.Run();
