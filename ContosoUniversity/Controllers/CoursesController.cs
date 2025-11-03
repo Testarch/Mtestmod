@@ -78,7 +78,7 @@ namespace ContosoUniversity.Controllers
                     try
                     {
                         // Create uploads directory if it doesn't exist
-                        var uploadsPath = Server.MapPath("~/Uploads/TeachingMaterials/");
+                        var uploadsPath = System.Web.HttpContext.Current.Server.MapPath("~/Uploads/TeachingMaterials/");
                         if (!Directory.Exists(uploadsPath))
                         {
                             Directory.CreateDirectory(uploadsPath);
@@ -161,7 +161,7 @@ namespace ContosoUniversity.Controllers
                     try
                     {
                         // Create uploads directory if it doesn't exist
-                        var uploadsPath = Server.MapPath("~/Uploads/TeachingMaterials/");
+                        var uploadsPath = System.Web.HttpContext.Current.Server.MapPath("~/Uploads/TeachingMaterials/");
                         if (!Directory.Exists(uploadsPath))
                         {
                             Directory.CreateDirectory(uploadsPath);
@@ -174,7 +174,7 @@ namespace ContosoUniversity.Controllers
                         // Delete old file if exists
                         if (!string.IsNullOrEmpty(course.TeachingMaterialImagePath))
                         {
-                            var oldFilePath = Server.MapPath(course.TeachingMaterialImagePath);
+                            var oldFilePath = System.Web.HttpContext.Current.Server.MapPath(course.TeachingMaterialImagePath);
                             if (System.IO.File.Exists(oldFilePath))
                             {
                                 System.IO.File.Delete(oldFilePath);
@@ -231,7 +231,7 @@ namespace ContosoUniversity.Controllers
             // Delete associated image file if it exists
             if (!string.IsNullOrEmpty(course.TeachingMaterialImagePath))
             {
-                var filePath = Server.MapPath(course.TeachingMaterialImagePath);
+                var filePath = System.Web.HttpContext.Current.Server.MapPath(course.TeachingMaterialImagePath);
                 if (System.IO.File.Exists(filePath))
                 {
                     try
